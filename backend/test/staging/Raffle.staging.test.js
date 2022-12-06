@@ -15,6 +15,28 @@ developmentChains.includes(network.name)
         entranceFee = await raffle.getEntranceFee();
       });
 
+      describe("checkUpkeep", function () {
+        it("Check if checkUpkeep returns true when all conditions are satisfied", async function () {
+          const txRes = await raffle.enterRaffle({ value: entranceFee });
+          await txRes.wait(2);
+
+          const { upkeepNeeded } = await raffle.checkUpkeep("0x");
+          assert(upkeepNeeded, `Value of upkeepNeeded is ${upkeepNeeded}`);
+        });
+      });
+
+      describe("performUpkeep", function () {
+        it("Check if performUpkeep runs when checkUpkeep is true else reverts", async function () {
+          const { upkeepNeeded } = await raffle.checkUpkeep("0x");
+
+          upkeepNeeded
+            ? await expect(raffle.performUpkeep("0x")).not.to.be.reverted
+            : await expect(raffle.performUpkeep("0x")).to.be.revertedWith(
+                "Raffle__UpKeepNotNeeded"
+              );
+        });
+      });
+
       describe("fulfillRandomWords", function () {
         it("Works with live Chainlink automators and Chainlink VRF, we get a random winner", async function () {
           const startingTimeStamp = raffle.getLatestTimeStamp();

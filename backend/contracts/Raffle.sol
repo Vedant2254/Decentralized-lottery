@@ -63,6 +63,18 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         i_interval = interval;
     }
 
+    receive() external payable {
+        // sends back the ether
+        (bool success, ) = payable(msg.sender).call{value: msg.value}("");
+        if (!success) enterRaffle();
+    }
+
+    fallback() external payable {
+        // sends back the ether
+        (bool success, ) = payable(msg.sender).call{value: msg.value}("");
+        if (!success) enterRaffle();
+    }
+
     /**
      * @dev A player is added to the lottery in this function
      * 1. The lottery should be in OPEN state to proceed further
@@ -107,12 +119,13 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
      */
     function performUpkeep(bytes calldata /* performData */) external override {
         (bool upkeepNeeded, ) = checkUpkeep("");
-        if (!upkeepNeeded)
+        if (!upkeepNeeded) {
             revert Raffle__UpKeepNotNeeded(
                 address(this).balance,
                 s_players.length,
                 uint256(s_raffleState)
             );
+        }
 
         s_raffleState = RaffleState.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(

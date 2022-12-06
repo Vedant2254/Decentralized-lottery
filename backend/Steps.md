@@ -22,16 +22,16 @@
 
 7. We use `event` type of declare an event. It can be declare like so
 
-    ```
-    event storedNumber (
-        uint256 indexed oldNumber,
-        uint256 indexed newNumber,
-        uint256 addedNumber,
-        address sender
-    )
-    ```
+   ```
+   event storedNumber (
+       uint256 indexed oldNumber,
+       uint256 indexed newNumber,
+       uint256 addedNumber,
+       address sender
+   )
+   ```
 
-    There are two types of parameters to the events, indexed and non-indexed parameters. `indexed` keyword is used to declare indexed parameters. These are much easier to search for than the non-indexed parameters. Non-indexed parameters are embedded directly into contract abi. If you have abi they are easy to decode, else they are hard to decode.
+   There are two types of parameters to the events, indexed and non-indexed parameters. `indexed` keyword is used to declare indexed parameters. These are much easier to search for than the non-indexed parameters. Non-indexed parameters are embedded directly into contract abi. If you have abi they are easy to decode, else they are hard to decode.
 
 8. This is how event is emitted
 
@@ -61,6 +61,8 @@
 1. Make our contract chainlink keeper compatible by implementing the two functions `checkUpKeep` and `performUpKeep`.
 2. Next, we need to register our smart contract on Chainlink Keeper to request to upkeep our contract.
 
+_By default, `checkUpKeep()` takes `bytes calldata checkData` as argument. We are calling `checkUpKeep()` in `performUpKeep()` function by passing an empty string as parameter. Because, `calldata` does not work with strings, we need to make it `memory`, i.e. `checkUpKeep(bytes memory checkData)`._
+
 #### Enums in smart contract
 
 ```
@@ -70,3 +72,24 @@ enum RaffleState {
     CALCULATING
 } // uint256 0 = OPEN, 1 = CALCULATING
 ```
+
+### Deployment
+
+`await deployments.get("Raffle")` to get the deployment
+`await ethers.getContract("Raffle")` to get the contract
+
+### [Hardhat network](https://hardhat.org/hardhat-network/docs/reference)
+
+Hardhat network can be completely controlled using the methods mentioned in above documentation. Some methods are tried out in `scripts/temp.js`.
+
+Like what controls?
+
+1. View the stack trace of a transaction using `debug_traceTransaction`.
+2. Mine a block using `evm_mine`.
+3. Increase blockchain time `evm_increaseTime`.
+
+All methods can be seen in the docs.
+
+### callStatic
+
+`callStatic` is a useful method that submits a state-changing transaction to an Ethereum node, but asks the node to simulate the state change, rather than to execute it. Our script can then return the result of the simulated state change.

@@ -212,4 +212,52 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
           });
         });
       });
+
+      describe("changeInterval", function () {
+        it("Check if reverts if sender is not owner", async function () {
+          const player = (await ethers.getSigners())[1];
+          const playerConnectedContract = await ethers.getContract("Raffle", player);
+
+          await expect(playerConnectedContract.changeInterval("50")).to.be.revertedWith(
+            "Raffle__NotOwner"
+          );
+        });
+
+        it("Check if performUpkeep is performed before changing the interval and interval is changed", async function () {
+          await raffle.enterRaffle({ value: netConfig.entranceFee });
+          await network.provider.send("evm_increaseTime", [interval.toNumber() + 1]);
+          await network.provider.send("evm_mine", []);
+
+          await new Promise(async (resolve, reject) => {
+            raffle.once("RequestedRaffleWinner", async () => {
+              try {
+                assert.equal((await raffle.getInterval()).toString(), "50");
+              } catch (e) {
+                reject(e);
+              }
+              resolve();
+            });
+            await raffle.changeInterval("50");
+          });
+        });
+
+        it("Interval changes if upkeepNeeded is false", async function () {
+          await network.provider.send("evm_increaseTime", [interval.toNumber() - 5]);
+          await network.provider.send("evm_mine", []);
+
+          await raffle.changeInterval("70");
+          assert.equal((await raffle.getInterval()).toString(), "70");
+        });
+
+        it("Interval changes take effect", async function () {
+          await raffle.changeInterval("100");
+
+          await raffle.enterRaffle({ value: netConfig.entranceFee });
+          await network.provider.send("evm_increaseTime", [interval.toNumber() + 1]);
+          await network.provider.send("evm_mine", []);
+
+          const { upkeepNeeded } = await raffle.checkUpkeep("0x");
+          assert(!upkeepNeeded);
+        });
+      });
     });

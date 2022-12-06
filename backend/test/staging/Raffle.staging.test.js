@@ -18,6 +18,7 @@ developmentChains.includes(network.name)
       describe("checkUpkeep", function () {
         it("Check if checkUpkeep returns true when all conditions are satisfied", async function () {
           const txRes = await raffle.enterRaffle({ value: entranceFee });
+          console.log(txRes.hash);
           await txRes.wait(2);
 
           const { upkeepNeeded } = await raffle.checkUpkeep("0x");
@@ -70,6 +71,29 @@ developmentChains.includes(network.name)
             const txRes = await raffle.enterRaffle({ value: entranceFee });
             console.log(txRes);
             const winnerStartingBalance = await accounts[0].getBalance();
+          });
+        });
+      });
+
+      describe("changeInterval", function () {
+        it("Check if performUpkeep is performed before changing the interval and interval is changed", async function () {
+          let txRes = await raffle.enterRaffle({ value: netConfig.entranceFee });
+          console.log(txRes.hash);
+          await txRes.wait(1);
+
+          await new Promise(async (resolve, reject) => {
+            raffle.once("RequestedRaffleWinner", async () => {
+              try {
+                console.log("Event triggered...");
+                assert.equal((await raffle.getInterval()).toString(), "50");
+              } catch (e) {
+                reject(e);
+              }
+              resolve();
+            });
+            console.log("Changing interval...");
+            txRes = await raffle.changeInterval("50");
+            console.log(txRes.hash);
           });
         });
       });

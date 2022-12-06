@@ -3,11 +3,7 @@ const { networkConfig } = require("../helper-hardhat-config");
 
 async function main() {
   const { deployer } = await getNamedAccounts();
-  const contract = await ethers.getContractAt(
-    "Raffle",
-    "0xF8e55E1140Afa9D908758a508c6889e0711872eb",
-    deployer
-  );
+  const contract = await ethers.getContract("Raffle", deployer);
 
   /* Adding player to the raffle */
   // console.log("Entering the raffle...");
@@ -25,6 +21,10 @@ async function main() {
   // const txRes = await contract.performUpkeep("0x");
   // console.log(`Transaction hash: ${txRes.hash}`);
   // const txReciept = await txRes.wait(1);
+
+  /* Calling changeInterval */
+  const txRes = await contract.changeInterval("50");
+  console.log(`Transaction hash: ${txRes.hash}`);
 }
 
 main()

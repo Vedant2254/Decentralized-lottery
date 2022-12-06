@@ -12,6 +12,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/AutomationCompatible.sol";
 
+error Raffle__NotOwner();
 error Raffle__NotEnoughETH();
 error Raffle__TransferFailed();
 error Raffle__NotOpen();
@@ -25,6 +26,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     } // uint256 0 = OPEN, 1 = CALCULATING
 
     /* State variables */
+    address private immutable i_owner;
     address payable[] private s_players; // array of payable addresses because any one address will be the winner and will be payed
     uint256 private immutable i_entranceFee; // immutable because set only once in constructor
     VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
@@ -38,7 +40,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     address private s_recentWinner;
     RaffleState private s_raffleState;
     uint256 private s_lastTimeStamp;
-    uint256 private immutable i_interval;
+    uint256 private i_interval;
 
     /* Events - should be named in reverse order of name of function it is emitted from */
     event RaffleEnter(address indexed player);
@@ -53,6 +55,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         uint32 callbackGasLimit,
         uint256 interval
     ) VRFConsumerBaseV2(vrfCoordinatorV2) {
+        i_owner = msg.sender;
         i_entranceFee = entranceFee;
         i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
         i_gasLane = gasLane;
@@ -117,7 +120,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
      * 2. The random number is requested by passing required parameters, the process is done in 2 transactions
      * 3. Event is emitted
      */
-    function performUpkeep(bytes calldata /* performData */) external override {
+    function performUpkeep(bytes memory /* performData */) public override {
         (bool upkeepNeeded, ) = checkUpkeep("");
         if (!upkeepNeeded) {
             revert Raffle__UpKeepNotNeeded(
@@ -163,6 +166,14 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         s_lastTimeStamp = block.timestamp;
 
         emit WinnerPicked(recentWinner);
+    }
+
+    function changeInterval(uint256 interval) public {
+        if (msg.sender != i_owner) revert Raffle__NotOwner();
+
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if (upkeepNeeded) performUpkeep("");
+        i_interval = interval;
     }
 
     /* View / pure functions */

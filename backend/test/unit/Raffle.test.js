@@ -260,4 +260,18 @@ const { developmentChains, networkConfig } = require("../../helper-hardhat-confi
           assert(!upkeepNeeded);
         });
       });
+
+      describe("isPlayerEntered", function () {
+        it("Returns true when player is in the Raffle", async function () {
+          await raffle.enterRaffle({ value: netConfig.entranceFee });
+
+          const retVal = await raffle.isPlayerEntered(deployer);
+          assert(retVal);
+        });
+
+        it("Returns false when player is not in the Raffle", async function () {
+          const retVal = await raffle.isPlayerEntered(deployer);
+          assert(!retVal);
+        });
+      });
     });

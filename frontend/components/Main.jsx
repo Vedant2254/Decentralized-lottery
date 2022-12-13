@@ -80,7 +80,7 @@ export default function Main() {
   }, [isWeb3Enabled, chainIdHex, account]);
 
   return (
-    <div className="m-6 min-w-fit w-60 mx-auto">
+    <div className="m-6 max-w-lg mx-auto">
       {isWeb3Enabled ? (
         contractAddress ? (
           <>

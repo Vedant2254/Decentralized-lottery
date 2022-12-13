@@ -10,16 +10,8 @@ export default function EnterRaffleButton({ enterRaffle, updateUI }) {
   function showStatusNotification() {
     dispatch({
       type: "info",
-      title: (
-        <a href={txLink} target="_blank">
-          Transaction
-        </a>
-      ),
-      message: (
-        <a href={txLink} target="_blank">
-          View Transaction
-        </a>
-      ),
+      title: "Transaction",
+      message: "Transaction Sent!",
       position: "topR",
     });
   }
@@ -48,13 +40,12 @@ export default function EnterRaffleButton({ enterRaffle, updateUI }) {
       setTxLink(`https://goerli.etherscan.io/tx/${tx.hash}`);
       showStatusNotification();
       await tx.wait(1);
-      setTxLink(null);
       updateUI();
       showSuccessNotification();
     } catch (e) {
-      setTxLink(null);
       showErrorNotification("Transaction Failed!");
     }
+    setTxLink(null);
   }
 
   async function handleError(err) {
@@ -67,8 +58,9 @@ export default function EnterRaffleButton({ enterRaffle, updateUI }) {
   return (
     <>
       {txLink ? (
-        <button className="w-full bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-md disabled:bg-blue-400 disabled:hover:bg-blue-400 transition-all">
-          <a href={txLink} target="_blank" className="w-full">
+        <button className="w-full bg-blue-500 hover:bg-blue-400 text-white p-2 rounded-md disabled:bg-blue-400 transition-all">
+          <Spinner />
+          <a href={txLink} target="_blank" className="w-full ml-2">
             View Transaction
           </a>
         </button>
@@ -81,7 +73,7 @@ export default function EnterRaffleButton({ enterRaffle, updateUI }) {
             });
           }}
           disabled={isLoading || isFetching}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-md disabled:bg-blue-400 disabled:hover:bg-blue-400 transition-all"
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-md disabled:bg-blue-400 transition-all"
         >
           {isLoading || isFetching ? <Spinner /> : "Enter Raffle"}
         </button>

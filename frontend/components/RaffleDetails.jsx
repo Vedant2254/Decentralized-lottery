@@ -7,19 +7,22 @@ export default function RaffleDetails({
 }) {
   return (
     <div className="mt-4 p-4 w-full rounded-xl bg-blue-100">
-      Entrace fee:{" "}
-      {entranceFee != "0" ? (
-        `${ethers.utils.formatEther(entranceFee)} ETH`
+      {entranceFee == "0" ? (
+        <div className="flex justify-center">
+          <Spinner size={6} blue={true} />
+        </div>
       ) : (
-        <Spinner blue={true} />
-      )}
-      <br /> Number of players: {playerCount || <Spinner blue={true} />}
-      <br /> Recent Winner: {recentWinner || <Spinner blue={true} />}
-      <br />{" "}
-      {playerEntered != null && (
-        <p className={playerEntered ? "text-green-600" : "text-red-600"}>
-          {playerEntered ? "You have entered the raffle!" : "You have not entered the raffle!"}
-        </p>
+        <div>
+          Entrace fee: {ethers.utils.formatEther(entranceFee)} ETH
+          <br /> Number of players: {playerCount}
+          <br /> Recent Winner: {recentWinner}
+          <br />{" "}
+          {playerEntered != null && (
+            <p className={playerEntered ? "text-green-600" : "text-red-600"}>
+              {playerEntered ? "You have entered the raffle!" : "You have not entered the raffle!"}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

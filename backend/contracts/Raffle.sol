@@ -40,7 +40,8 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     address private s_recentWinner;
     RaffleState private s_raffleState;
     uint256 private s_lastTimeStamp;
-    uint256 private i_interval;
+    uint256 private s_interval;
+    uint256 private s_new_interval;
 
     /* Events - should be named in reverse order of name of function it is emitted from */
     event RaffleEnter(address indexed player);
@@ -63,7 +64,8 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         i_callbackGasLimit = callbackGasLimit;
         s_raffleState = RaffleState.OPEN;
         s_lastTimeStamp = block.timestamp;
-        i_interval = interval;
+        s_interval = interval;
+        s_new_interval = interval;
     }
 
     receive() external payable {
@@ -107,7 +109,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         bytes memory /* checkData */
     ) public view override returns (bool upkeepNeeded, bytes memory /* performData */) {
         bool isOpen = s_raffleState == RaffleState.OPEN;
-        bool timePassed = (block.timestamp - s_lastTimeStamp) > i_interval;
+        bool timePassed = (block.timestamp - s_lastTimeStamp) > s_interval;
         bool hasPlayers = s_players.length > 0;
         bool hasBalance = address(this).balance > 0;
 
@@ -164,19 +166,22 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         s_raffleState = RaffleState.OPEN;
         s_players = new address payable[](0);
         s_lastTimeStamp = block.timestamp;
+        s_interval = s_new_interval;
 
         emit WinnerPicked(recentWinner);
     }
 
-    function changeInterval(uint256 interval) public {
+    function changeInterval(uint256 interval, bool force) public {
         if (msg.sender != i_owner) revert Raffle__NotOwner();
-
-        (bool upkeepNeeded, ) = checkUpkeep("");
-        if (upkeepNeeded) performUpkeep("");
-        i_interval = interval;
+        if (s_players.length < 1 || force) s_interval = s_new_interval = interval;
+        else s_new_interval = interval;
     }
 
     /* View / pure functions */
+    function getOwner() public view returns (address) {
+        return i_owner;
+    }
+
     function getVRFCoordinatorV2() public view returns (VRFCoordinatorV2Interface) {
         return i_vrfCoordinator;
     }
@@ -234,6 +239,10 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     }
 
     function getInterval() public view returns (uint256) {
-        return i_interval;
+        return s_interval;
+    }
+
+    function getNextInterval() public view returns (uint256) {
+        return s_new_interval;
     }
 }

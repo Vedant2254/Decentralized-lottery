@@ -3,19 +3,29 @@ import { useMoralis, useWeb3Contract } from "react-moralis";
 import EnterRaffleButton from "./EnterRaffleButton";
 import { contractAddresses, abi } from "../constants/index";
 import RaffleDetails from "./RaffleDetails";
+import ChangeInterval from "./ChangeInterval";
 
 export default function Main() {
   const { account, isWeb3Enabled, chainId: chainIdHex } = useMoralis();
   const chainId = parseInt(chainIdHex);
   const contractAddress = chainId in contractAddresses ? contractAddresses[chainId][0] : null;
   const initialRaffleState = {
+    isRaffleOwner: false,
     entranceFee: "0",
     playerCount: null,
     recentWinner: null,
     playerEntered: null,
+    interval: null,
   };
 
   const [raffleState, setRaffleState] = useState(initialRaffleState);
+
+  const { runContractFunction: getOwner } = useWeb3Contract({
+    abi,
+    contractAddress,
+    functionName: "getOwner",
+    params: {},
+  });
 
   const { runContractFunction: getEntranceFee } = useWeb3Contract({
     abi,
@@ -38,11 +48,18 @@ export default function Main() {
     params: {},
   });
 
-  const { runContractFunction: isPlayerEntered, data } = useWeb3Contract({
+  const { runContractFunction: isPlayerEntered } = useWeb3Contract({
     abi,
     contractAddress,
     functionName: "isPlayerEntered",
     params: { player: account },
+  });
+
+  const { runContractFunction: getInterval } = useWeb3Contract({
+    abi,
+    contractAddress,
+    functionName: "getInterval",
+    params: {},
   });
 
   const enterRaffle = useWeb3Contract({
@@ -58,16 +75,23 @@ export default function Main() {
       try {
         setRaffleState(initialRaffleState);
 
+        const currIsRaffleOwner = (await getOwner()).toLowerCase() === account.toLowerCase();
         const currEntranceFee = (await getEntranceFee()).toString();
         const currPlayerCount = (await getPlayerCount()).toString();
         const currRecentWinner = (await getRecentWinner()).toString();
         const currPlayerEntered = await isPlayerEntered();
+        const currInterval = (await getInterval()).toString();
+
+        console.log(await getOwner());
+        console.log(account);
 
         setRaffleState({
+          isRaffleOwner: currIsRaffleOwner,
           entranceFee: currEntranceFee,
           playerCount: currPlayerCount,
           recentWinner: currRecentWinner,
           playerEntered: currPlayerEntered,
+          interval: currInterval,
         });
       } catch (e) {
         console.log(e);
@@ -86,6 +110,9 @@ export default function Main() {
           <>
             <EnterRaffleButton enterRaffle={enterRaffle} updateUI={updateUI} />
             <RaffleDetails raffleState={raffleState} />
+            {raffleState.isRaffleOwner && (
+              <ChangeInterval contractAddress={contractAddress} abi={abi} updateUI={updateUI} />
+            )}
           </>
         ) : (
           `${chainId} chain id not supported!`

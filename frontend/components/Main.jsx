@@ -8,7 +8,7 @@ import ChangeInterval from "./ChangeInterval";
 export default function Main() {
   const { account, isWeb3Enabled, chainId: chainIdHex } = useMoralis();
   const chainId = parseInt(chainIdHex);
-  const contractAddress = chainId in contractAddresses ? contractAddresses[chainId][0] : null;
+  const contractAddress = contractAddresses[chainId] || null;
   const initialRaffleState = {
     isRaffleOwner: false,
     entranceFee: "0",

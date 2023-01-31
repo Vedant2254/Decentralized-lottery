@@ -1,3 +1,5 @@
+// this creates abi.json and contractAddress.json files in frontend/constants
+
 const { ethers, network } = require("hardhat");
 const fs = require("fs");
 
@@ -17,9 +19,8 @@ async function updateContractAddresses() {
   const contractAddresses = JSON.parse(fs.readFileSync(FILE_PATH, "utf8"));
 
   if (contractAddresses[chainId]) {
-    if (!contractAddresses[chainId].includes(raffle.address))
-      contractAddresses[chainId].push(raffle.address);
-  } else contractAddresses[chainId] = [raffle.address];
+    contractAddresses[chainId] = raffle.address;
+  } else contractAddresses[chainId] = raffle.address;
 
   fs.writeFileSync(FILE_PATH, JSON.stringify(contractAddresses));
 }
